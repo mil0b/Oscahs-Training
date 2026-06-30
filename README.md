@@ -67,23 +67,47 @@ cargo tauri build
 
 Output: `src-tauri/target/release/bundle/msi/Oscahs Training_<version>_x64_en-US.msi`
 
-## Shipping an update
+## Development workflow
 
-1. Bump `version` in `src-tauri/tauri.conf.json`.
-2. Commit, then tag and push:
+There are two GitHub Actions workflows. Understanding the difference between them is the key to the whole pipeline:
+
+| What you do | Workflow that runs | What it produces | Triggers staff auto-updates? |
+|---|---|---|---|
+| `git push` to `main` | `Build Windows Installer` | Downloadable MSI artifact in Actions (expires after 90 days) | **No** |
+| `git tag vX.Y.Z && git push origin vX.Y.Z` | `Release` | Signed GitHub Release + `latest.json` | **Yes** |
+
+This gives you an implicit staging step: push your changes, download the artifact from the Actions run, install it on a test machine, and verify it before tagging. Only the tag triggers the release that auto-updates all staff.
+
+### Day-to-day change cycle
+
+1. Make and test changes locally:
    ```bash
+   cd src-tauri
+   cargo tauri dev
+   ```
+2. Push to `main` for a test build:
+   ```bash
+   git add <files>
+   git commit -m "..."
+   git push
+   ```
+3. Go to **Actions → Build Windows Installer → latest run** and download the MSI artifact. Install it on a test machine and verify.
+4. When happy, bump `version` in `src-tauri/tauri.conf.json` (e.g. `0.1.0` → `0.2.0`), commit, then tag and push:
+   ```bash
+   git add src-tauri/tauri.conf.json
+   git commit -m "Release v0.2.0"
+   git push
    git tag v0.2.0
    git push origin v0.2.0
    ```
-3. The `Release` GitHub Actions workflow builds, signs, and publishes a GitHub Release with the installer and an update manifest.
-4. Every installed app checks that release on startup and offers an in-app update — no manual reinstall needed.
+5. The `Release` workflow builds, signs, and publishes a GitHub Release with the installer and update manifest. Every installed copy of the app checks on next launch and auto-updates — no manual reinstall needed.
 
-This requires two repository secrets to be set under **Settings → Secrets and variables → Actions**:
+### Required repository secrets
 
-- `TAURI_SIGNING_PRIVATE_KEY` — the updater's private signing key
+Set these under **Settings → Secrets and variables → Actions** before the `Release` workflow can sign and publish:
+
+- `TAURI_SIGNING_PRIVATE_KEY` — the updater's Ed25519 private key (generated with `cargo tauri signer generate`)
 - `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` — its password
-
-(Pushing to `main` without a tag just builds a downloadable artifact via the `Build Windows Installer` workflow — it does not create a signed release or trigger updates.)
 
 ## Project structure
 

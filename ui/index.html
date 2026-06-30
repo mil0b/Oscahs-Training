@@ -429,6 +429,10 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
   cursor: pointer; margin-top: 0.3rem;
 }
 .add-chapter-btn:hover { border-color: #E6007E; color: #E6007E; }
+.admin-version-footer {
+  margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid #F1F0EF;
+  font-family: Lato,sans-serif; font-size: 0.72rem; color: #A8A29E; text-align: center;
+}
 
 /* ── UPDATE BAR ── */
 .update-bar {
@@ -479,6 +483,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
 [data-theme="dark"] .btn-secondary:hover { border-color: #E6007E; color: #F472B6; }
 [data-theme="dark"] .admin-video-item { border-color: #3E3B3B; }
 [data-theme="dark"] .admin-video-fname { color: #6B7280; }
+[data-theme="dark"] .admin-version-footer { border-color: #3E3B3B; color: #6B7280; }
 [data-theme="dark"] .add-chapter-btn { border-color: #3E3B3B; color: #9CA3AF; }
 </style>
 </head>
@@ -503,6 +508,11 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
     <div class="hdr-divider"></div>
     <span class="hdr-label">Training Library</span>
     <div class="hdr-spacer"></div>
+    <button class="theme-btn" id="folderBtn" aria-label="Training folder settings" title="Training folder settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+      </svg>
+    </button>
     <button class="theme-btn" id="adminBtn" aria-label="Admin" title="Admin">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17">
         <circle cx="12" cy="12" r="3"/>
@@ -647,6 +657,10 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
   <div class="modal-box wide" id="adminPanelBox"></div>
 </div>
 
+<div class="modal-overlay hidden" id="folderOverlay">
+  <div class="modal-box" id="folderBox"></div>
+</div>
+
 <script>
 (function () {
 'use strict';
@@ -703,6 +717,7 @@ var FALLBACK_VIDEOS = [
 ];
 
 var VIDEOS = [];
+var APP_VERSION = '';
 var currentVideo = null;
 var currentCat = 'All';
 var activeCh = -1;
@@ -849,7 +864,7 @@ function renderGrid() {
     card.innerHTML =
       '<div class="card-thumb" style="background:' + col.bg + ';">'
     +   '<div class="play-circle">'
-    +     '<svg class="play-icon-svg" viewBox="0 0 24 24" fill="' + col.fg + '"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
+    +     '<svg class="play-icon-svg" viewBox="0 0 24 24" fill="#302E2E"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
     +   '</div>'
     + '</div>'
     + '<div class="card-body">'
@@ -1154,6 +1169,82 @@ document.getElementById('themeBtn').addEventListener('click', function () {
   showToast(next === 'dark' ? 'Dark mode on' : 'Light mode on');
 });
 
+/* ── Folder Settings ── */
+var folderOverlay = document.getElementById('folderOverlay');
+var folderBox     = document.getElementById('folderBox');
+
+document.getElementById('folderBtn').addEventListener('click', openFolderSettings);
+folderOverlay.addEventListener('click', function (e) { if (e.target === folderOverlay) closeFolderSettings(); });
+
+function closeFolderSettings() {
+  folderOverlay.classList.add('hidden');
+  folderBox.innerHTML = '';
+}
+
+async function openFolderSettings() {
+  if (!window.__TAURI__) { showToast('Only available in the desktop app'); return; }
+  folderBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#78716C;padding:2rem;">Loading&hellip;</p>';
+  folderOverlay.classList.remove('hidden');
+  try {
+    var info = await window.__TAURI__.core.invoke('get_training_folder');
+    renderFolderSettings(info);
+  } catch (e) {
+    folderBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#C2006A;padding:2rem;">Error: ' + esc(String(e)) + '</p>';
+  }
+}
+
+function renderFolderSettings(info) {
+  var html =
+    '<button class="modal-close-x" id="folderCloseX">&times;</button>' +
+    '<h2 style="font-family:var(--font-heading);font-weight:900;font-size:1.3rem;margin-bottom:0.75rem;">Training Folder</h2>' +
+    '<p style="font-family:Lato,sans-serif;font-size:0.82rem;color:#78716C;margin:0 0 1rem;">Where the app looks for videos and metadata. This setting is local to this machine only.</p>' +
+    '<p class="field-label">Current path</p>' +
+    '<div style="font-family:Lato,sans-serif;font-size:0.82rem;color:#57534E;background:#F8F7F4;border:1.5px solid #E5E7EB;border-radius:8px;padding:10px 12px;margin-bottom:1.25rem;word-break:break-all;">' +
+    esc(info.path || 'Not detected') +
+    (info.is_override
+      ? ' <span style="color:#E6007E;font-size:0.75rem;font-weight:700;margin-left:6px;">custom</span>'
+      : ' <span style="color:#A8A29E;font-size:0.75rem;margin-left:6px;">auto-detected</span>') +
+    '</div>' +
+    '<p class="field-label">Set a custom path</p>' +
+    '<input class="field-input" type="text" id="folderInput" placeholder="e.g. D:\\Dropbox\\Oscahs Team\\Magicbooking Training" value="' + (info.is_override ? esc(info.path || '') : '') + '">' +
+    '<p style="font-family:Lato,sans-serif;font-size:0.78rem;color:#A8A29E;margin:6px 0 1.25rem;">Leave blank to auto-detect from Dropbox. Changes take effect on next video load.</p>' +
+    '<div class="modal-error" id="folderError" style="display:none;"></div>' +
+    '<div class="modal-actions">' +
+    (info.is_override ? '<button class="btn-secondary" id="folderResetBtn">Reset to default</button>' : '') +
+    '<button class="btn-secondary" id="folderCancelBtn">Cancel</button>' +
+    '<button class="btn-primary" id="folderSaveBtn">Save</button>' +
+    '</div>';
+  folderBox.innerHTML = html;
+
+  document.getElementById('folderCloseX').onclick = closeFolderSettings;
+  document.getElementById('folderCancelBtn').onclick = closeFolderSettings;
+  if (info.is_override) {
+    document.getElementById('folderResetBtn').onclick = async function () {
+      try {
+        await window.__TAURI__.core.invoke('set_training_folder', { path: null });
+        closeFolderSettings();
+        showToast('Folder reset to auto-detect');
+        await loadVideos(); buildCatFilter(); renderGrid();
+      } catch (e) {
+        var el = document.getElementById('folderError');
+        if (el) { el.textContent = String(e); el.style.display = ''; }
+      }
+    };
+  }
+  document.getElementById('folderSaveBtn').onclick = async function () {
+    var val = (document.getElementById('folderInput').value || '').trim();
+    try {
+      await window.__TAURI__.core.invoke('set_training_folder', { path: val || null });
+      closeFolderSettings();
+      showToast(val ? 'Folder path saved' : 'Folder reset to auto-detect');
+      await loadVideos(); buildCatFilter(); renderGrid();
+    } catch (e) {
+      var el = document.getElementById('folderError');
+      if (el) { el.textContent = String(e); el.style.display = ''; }
+    }
+  };
+}
+
 /* ── Admin ── */
 var adminAuthOverlay  = document.getElementById('adminAuthOverlay');
 var adminAuthBox      = document.getElementById('adminAuthBox');
@@ -1171,6 +1262,7 @@ document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   if (!adminPanelOverlay.classList.contains('hidden')) closeAdminPanel();
   else if (!adminAuthOverlay.classList.contains('hidden')) closeAdminAuth();
+  else if (!folderOverlay.classList.contains('hidden')) closeFolderSettings();
 });
 
 async function openAdminAuth() {
@@ -1326,6 +1418,7 @@ function renderAdminPanel() {
     + '<button class="btn-secondary" id="panelCancelBtn" type="button">Close</button>'
     + '<button class="btn-primary" id="panelSaveBtn" type="button">Save changes</button>'
     + '</div>';
+  html += '<div class="admin-version-footer">Oscahs Training' + (APP_VERSION ? ' v' + esc(APP_VERSION) : '') + ' &middot; maintained by mil0b</div>';
 
   adminPanelBox.innerHTML = html;
 
@@ -1467,6 +1560,9 @@ async function checkForUpdates() {
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', async function () {
+  if (window.__TAURI__ && window.__TAURI__.app) {
+    try { APP_VERSION = await window.__TAURI__.app.getVersion(); } catch (e) { /* not fatal */ }
+  }
   await loadVideos();
   buildCatFilter();
   renderGrid();

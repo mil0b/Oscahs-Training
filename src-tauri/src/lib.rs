@@ -33,6 +33,33 @@ struct AdminAuth {
     hash: String,
 }
 
+#[derive(Serialize, Deserialize, Default)]
+struct AppConfig {
+    training_folder: Option<String>,
+}
+
+fn config_path() -> Result<PathBuf, String> {
+    #[cfg(target_os = "windows")]
+    {
+        if let Ok(appdata) = std::env::var("APPDATA") {
+            return Ok(PathBuf::from(appdata)
+                .join("com.oscahs.training")
+                .join("config.json"));
+        }
+    }
+    std::env::var("HOME")
+        .map(|h| PathBuf::from(h).join(".oscahs-training").join("config.json"))
+        .map_err(|_| "Cannot determine config directory".into())
+}
+
+fn read_config() -> AppConfig {
+    config_path()
+        .ok()
+        .and_then(|p| std::fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
 fn find_dropbox_root() -> Option<PathBuf> {
     // On Windows, Dropbox writes its actual sync path to a known config file.
     #[cfg(target_os = "windows")]
@@ -64,7 +91,12 @@ fn find_dropbox_root() -> Option<PathBuf> {
 }
 
 fn training_folder() -> Result<PathBuf, String> {
-    let dropbox = find_dropbox_root().ok_or("Dropbox folder not found on this machine")?;
+    let config = read_config();
+    if let Some(custom) = config.training_folder {
+        return Ok(PathBuf::from(custom));
+    }
+    let dropbox = find_dropbox_root()
+        .ok_or("Dropbox folder not found. Use the folder icon in the top bar to set the training folder path manually.")?;
     Ok(dropbox.join("Oscahs Team").join("Magicbooking Training"))
 }
 
@@ -214,6 +246,30 @@ fn admin_change_password(current_password: String, new_password: String) -> Resu
 }
 
 #[tauri::command]
+fn get_training_folder() -> serde_json::Value {
+    let config = read_config();
+    let auto_path = find_dropbox_root()
+        .map(|p| p.join("Oscahs Team").join("Magicbooking Training").to_string_lossy().into_owned());
+    let effective = config.training_folder.clone().or_else(|| auto_path.clone());
+    serde_json::json!({
+        "path": effective,
+        "is_override": config.training_folder.is_some(),
+        "auto_path": auto_path,
+    })
+}
+
+#[tauri::command]
+fn set_training_folder(path: Option<String>) -> Result<(), String> {
+    let config = AppConfig { training_folder: path };
+    let p = config_path()?;
+    if let Some(parent) = p.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let json = serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?;
+    std::fs::write(p, json).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn save_videos_manifest(password: String, entries: Vec<ManifestEntry>) -> Result<(), String> {
     if !admin_login(password)? {
         return Err("Incorrect admin password".into());
@@ -240,6 +296,8 @@ pub fn run() {
         .plugin(tauri_plugin_process::init())
         .invoke_handler(tauri::generate_handler![
             scan_videos,
+            get_training_folder,
+            set_training_folder,
             admin_status,
             admin_setup,
             admin_login,
