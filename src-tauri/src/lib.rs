@@ -1,11 +1,13 @@
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 
-#[derive(Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 struct ManifestEntry {
     filename: Option<String>,
     title: Option<String>,
     description: Option<String>,
+    category: Option<String>,
     chapters: Option<Vec<Chapter>>,
 }
 
@@ -18,9 +20,17 @@ struct Chapter {
 #[derive(Serialize)]
 struct VideoResult {
     path: String,
+    filename: String,
     title: String,
     description: Option<String>,
+    category: Option<String>,
     chapters: Vec<Chapter>,
+}
+
+#[derive(Serialize, Deserialize)]
+struct AdminAuth {
+    salt: String,
+    hash: String,
 }
 
 fn find_dropbox_root() -> Option<PathBuf> {
@@ -53,6 +63,31 @@ fn find_dropbox_root() -> Option<PathBuf> {
         .map(|h| PathBuf::from(h).join("Dropbox"))
 }
 
+fn training_folder() -> Result<PathBuf, String> {
+    let dropbox = find_dropbox_root().ok_or("Dropbox folder not found on this machine")?;
+    Ok(dropbox.join("Oscahs Team").join("Magicbooking Training"))
+}
+
+fn admin_file_path() -> Result<PathBuf, String> {
+    Ok(training_folder()?.join("admin.json"))
+}
+
+fn to_hex(bytes: &[u8]) -> String {
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
+fn hash_password(password: &str, salt: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(salt.as_bytes());
+    hasher.update(password.as_bytes());
+    to_hex(&hasher.finalize())
+}
+
+fn generate_salt() -> String {
+    let bytes: [u8; 16] = rand::random();
+    to_hex(&bytes)
+}
+
 fn title_from_filename(name: &str) -> String {
     let stem = std::path::Path::new(name)
         .file_stem()
@@ -71,22 +106,23 @@ fn title_from_filename(name: &str) -> String {
         .join(" ")
 }
 
+fn read_manifest(folder: &PathBuf) -> Vec<ManifestEntry> {
+    let json_path = folder.join("videos.json");
+    std::fs::read_to_string(json_path)
+        .ok()
+        .and_then(|s| serde_json::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
 #[tauri::command]
 fn scan_videos() -> Result<Vec<VideoResult>, String> {
-    let dropbox = find_dropbox_root().ok_or("Dropbox folder not found on this machine")?;
-    let folder = dropbox.join("Oscahs Team").join("Magicbooking Training");
+    let folder = training_folder()?;
 
     if !folder.exists() {
         return Ok(vec![]);
     }
 
-    let manifest: Vec<ManifestEntry> = {
-        let json_path = folder.join("videos.json");
-        std::fs::read_to_string(json_path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok())
-            .unwrap_or_default()
-    };
+    let manifest = read_manifest(&folder);
 
     let mut mp4s: Vec<PathBuf> = std::fs::read_dir(&folder)
         .map_err(|e| e.to_string())?
@@ -117,15 +153,74 @@ fn scan_videos() -> Result<Vec<VideoResult>, String> {
                     .map(str::to_string)
                     .unwrap_or_else(|| title_from_filename(&filename)),
                 description: meta.and_then(|m| m.description.clone()),
+                category: meta.and_then(|m| m.category.clone()),
                 chapters: meta
                     .and_then(|m| m.chapters.clone())
                     .unwrap_or_default(),
                 path: path.to_string_lossy().into_owned(),
+                filename,
             }
         })
         .collect();
 
     Ok(results)
+}
+
+#[tauri::command]
+fn admin_status() -> Result<bool, String> {
+    Ok(admin_file_path()?.exists())
+}
+
+#[tauri::command]
+fn admin_setup(password: String) -> Result<(), String> {
+    if password.len() < 6 {
+        return Err("Password must be at least 6 characters".into());
+    }
+    let folder = training_folder()?;
+    if !folder.exists() {
+        std::fs::create_dir_all(&folder).map_err(|e| e.to_string())?;
+    }
+    let path = admin_file_path()?;
+    if path.exists() {
+        return Err("An admin password is already set up for this team".into());
+    }
+    let salt = generate_salt();
+    let hash = hash_password(&password, &salt);
+    let json = serde_json::to_string_pretty(&AdminAuth { salt, hash }).map_err(|e| e.to_string())?;
+    std::fs::write(path, json).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn admin_login(password: String) -> Result<bool, String> {
+    let path = admin_file_path()?;
+    let content = std::fs::read_to_string(&path)
+        .map_err(|_| "Admin password has not been set up yet".to_string())?;
+    let auth: AdminAuth = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+    Ok(hash_password(&password, &auth.salt) == auth.hash)
+}
+
+#[tauri::command]
+fn admin_change_password(current_password: String, new_password: String) -> Result<(), String> {
+    if new_password.len() < 6 {
+        return Err("New password must be at least 6 characters".into());
+    }
+    if !admin_login(current_password)? {
+        return Err("Current password is incorrect".into());
+    }
+    let salt = generate_salt();
+    let hash = hash_password(&new_password, &salt);
+    let json = serde_json::to_string_pretty(&AdminAuth { salt, hash }).map_err(|e| e.to_string())?;
+    std::fs::write(admin_file_path()?, json).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn save_videos_manifest(password: String, entries: Vec<ManifestEntry>) -> Result<(), String> {
+    if !admin_login(password)? {
+        return Err("Incorrect admin password".into());
+    }
+    let folder = training_folder()?;
+    let json = serde_json::to_string_pretty(&entries).map_err(|e| e.to_string())?;
+    std::fs::write(folder.join("videos.json"), json).map_err(|e| e.to_string())
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -141,7 +236,16 @@ pub fn run() {
             }
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![scan_videos])
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
+        .invoke_handler(tauri::generate_handler![
+            scan_videos,
+            admin_status,
+            admin_setup,
+            admin_login,
+            admin_change_password,
+            save_videos_manifest
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
