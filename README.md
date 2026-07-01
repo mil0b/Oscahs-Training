@@ -10,6 +10,31 @@ A Windows desktop app (built with [Tauri](https://tauri.app)) for browsing and p
 - **Admin mode** — a password-gated panel (gear icon, top right) for editing video titles, descriptions, categories, chapters, and **display order**. Changes are written to `videos.json` in the shared Dropbox folder and sync to every installed copy automatically — no app update required for content changes
 - **Auto-updates** — the app checks GitHub Releases on startup and can download and install new versions in place
 
+## Installing the app (staff)
+
+### First-time installation
+
+1. Go to the [Releases page](https://github.com/mil0b/Oscahs-Training/releases) and download the `.msi` file from the latest release.
+2. Run the installer — click through the standard Windows prompts. No restart is required.
+3. The app appears in your Start menu as **Oscahs Training**.
+
+That's it. You only ever need to do this once — all future updates install themselves automatically.
+
+### Updates
+
+Every time you open the app it checks for a new version in the background. If one is available, a notification bar appears at the top of the window:
+
+> **Version X.Y.Z is available.** &nbsp; [Update now] &nbsp; [×]
+
+- Click **Update now** — the app downloads the update, installs it, and relaunches itself. The whole process takes about 30 seconds depending on your connection.
+- Click **×** to dismiss and carry on. The bar will reappear next time you open the app until the update is applied.
+
+Updates are never installed silently without your action — you always get the choice.
+
+If the download fails (e.g. no internet at the time), the button shows a brief error message. Just close and reopen the app when you have a connection and it will try again.
+
+---
+
 ## Getting started (development)
 
 **Prerequisites**
