@@ -73,8 +73,58 @@ a { color: inherit; }
 }
 .skip-link:focus { left: 16px; }
 
-.view { display: none; }
-.view.active { display: flex; flex-direction: column; min-height: 100vh; }
+/* Body is always a side-by-side flex row so library and player coexist */
+body { display: flex; min-height: 100vh; }
+
+#homeView {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  min-width: 0;
+  transition: flex 0.32s cubic-bezier(0.4,0,0.2,1);
+}
+
+#playerView {
+  flex: 0 0 0;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #1a1818;
+  transition: flex 0.32s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* Split view when player is open */
+body.player-open { height: 100vh; overflow: hidden; }
+body.player-open #homeView { flex: 0 0 300px; height: 100vh; overflow-y: auto; border-right: 1.5px solid #E8E6E1; }
+body.player-open #playerView { flex: 1; height: 100vh; overflow: hidden; }
+
+/* Sidebar: hide non-essential elements, compact everything */
+body.player-open .color-ribbon { display: none; }
+body.player-open .home-hero { display: none; }
+body.player-open .cat-filter-row { display: none; }
+body.player-open .site-header { padding: 0 0.75rem; height: 52px; }
+body.player-open .hdr-label,
+body.player-open .hdr-divider,
+body.player-open .hdr-spacer { display: none; }
+body.player-open .video-grid-wrap { padding: 0.5rem; }
+body.player-open .video-grid { grid-template-columns: 1fr; gap: 0.5rem; }
+body.player-open .card-thumb { height: 64px; }
+body.player-open .card-body { padding: 0.55rem 0.7rem 0.6rem; }
+body.player-open .card-desc,
+body.player-open .card-meta { display: none; }
+body.player-open .card-title { font-size: 0.82rem; margin-bottom: 0.15rem; }
+body.player-open .card-cat-badge { font-size: 0.6rem; padding: 2px 7px; margin-bottom: 0.3rem; }
+body.player-open .v-card { border-radius: 0.75rem; }
+body.player-open .v-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+body.player-open .play-circle { width: 28px; height: 28px; }
+body.player-open .play-icon-svg { width: 11px; height: 11px; margin-left: 2px; }
+body.player-open .empty-state { padding: 2rem 0.75rem; }
+
+/* Currently playing card in sidebar */
+.v-card.now-playing { border-color: #E6007E !important; box-shadow: 0 0 0 2px rgba(230,0,126,0.15), 0 2px 12px rgba(0,0,0,0.06); }
+.v-card.now-playing .card-title { color: #E6007E; }
 
 /* ── HEADER ── */
 .site-header {
@@ -208,8 +258,6 @@ a { color: inherit; }
 }
 
 /* ── PLAYER VIEW ── */
-#playerView { background: #1a1818; }
-#playerView.active { height: 100vh; overflow: hidden; }
 
 .player-topbar {
   background: #2C2929; border-bottom: 1px solid #3E3B3B;
@@ -371,6 +419,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
   background: white; border-radius: 1.25rem; width: 100%; max-width: 440px;
   padding: 1.75rem; box-shadow: 0 24px 60px rgba(0,0,0,0.3);
   max-height: 88vh; overflow-y: auto; position: relative; animation: fadeIn 0.2s;
+  overscroll-behavior: contain;
 }
 .modal-box.wide { max-width: 760px; }
 .modal-close-x {
@@ -461,6 +510,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
 
 /* ── DARK MODE ── */
 [data-theme="dark"] body { background: #1E1C1C; color: #F0ECEC; }
+[data-theme="dark"] body.player-open #homeView { border-right-color: #3E3B3B; }
 [data-theme="dark"] .site-header { background: #2C2929; border-color: #3E3B3B; box-shadow: 0 2px 12px rgba(0,0,0,0.5); }
 [data-theme="dark"] .hdr-divider { background: #3E3B3B; }
 [data-theme="dark"] .logo-img { background: white; padding: 3px 8px; border-radius: 7px; }
@@ -508,7 +558,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
 <div id="toast" role="status" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(8px);background:#E6007E;color:white;padding:0.5rem 1.25rem;border-radius:99px;font-family:Lato,sans-serif;font-size:0.82rem;font-weight:700;z-index:9998;pointer-events:none;opacity:0;transition:opacity 0.25s,transform 0.25s;box-shadow:0 4px 20px rgba(0,0,0,0.2);white-space:nowrap;"></div>
 
 <!-- ═══════════ HOME VIEW ═══════════ -->
-<div id="homeView" class="view active">
+<div id="homeView">
 
   <header class="site-header">
     <div class="logo-wrap">
@@ -547,7 +597,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
   <div class="home-hero">
     <div class="home-hero-text">
       <h1 class="page-title">Training <span>Library</span></h1>
-      <p class="page-subtitle">Everything you need to get great at MagicBooking and beyond.</p>
+      <p class="page-subtitle">Everything you need to be great at MagicBooking and beyond.</p>
     </div>
   </div>
 
@@ -569,7 +619,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
 </div>
 
 <!-- ═══════════ PLAYER VIEW ═══════════ -->
-<div id="playerView" class="view">
+<div id="playerView">
 
   <div class="player-topbar">
     <button class="back-btn" id="backBtn" aria-label="Back to library">
@@ -686,6 +736,16 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
 (function () {
 'use strict';
 
+/* Only close modal on backdrop click if pointer didn't move (not a scroll release) */
+function onBackdropClick(overlay, fn) {
+  var sx, sy;
+  overlay.addEventListener('mousedown', function (e) { sx = e.clientX; sy = e.clientY; });
+  overlay.addEventListener('mouseup', function (e) {
+    if (e.target !== overlay) return;
+    if (Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy) < 6) fn();
+  });
+}
+
 var THUMB_COLORS = [
   { bg: 'linear-gradient(135deg,#E6007E 0%,#FF4DB8 100%)', fg: 'white' },
   { bg: 'linear-gradient(135deg,#E94E1B 0%,#FF8C5A 100%)', fg: 'white' },
@@ -745,8 +805,6 @@ var activeCh = -1;
 var isDragging = false;
 
 var video    = document.getElementById('videoEl');
-var homeView = document.getElementById('homeView');
-var playerView = document.getElementById('playerView');
 var videoGrid  = document.getElementById('videoGrid');
 var loadingState = document.getElementById('loadingState');
 var emptyState   = document.getElementById('emptyState');
@@ -881,6 +939,7 @@ function renderGrid() {
     card.setAttribute('role', 'listitem');
     card.setAttribute('tabindex', '0');
     card.setAttribute('aria-label', v.title);
+    card.setAttribute('data-filename', v.filename || '');
 
     card.innerHTML =
       '<div class="card-thumb" style="background:' + col.bg + ';">'
@@ -913,8 +972,7 @@ function renderGrid() {
 /* ── Player ── */
 function openPlayer(v) {
   currentVideo = v;
-  homeView.classList.remove('active');
-  playerView.classList.add('active');
+  document.body.classList.add('player-open');
   document.getElementById('playerTitle').textContent = v.title;
   video.src = v.url;
   video.load();
@@ -922,13 +980,18 @@ function openPlayer(v) {
   resetControls();
   video.play().catch(function () {});
   announce('Now playing: ' + v.title);
+  // Highlight the active card in the sidebar
+  document.querySelectorAll('.v-card').forEach(function (c) { c.classList.remove('now-playing'); });
+  var fn = (v.filename || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+  var active = document.querySelector('.v-card[data-filename="' + fn + '"]');
+  if (active) { active.classList.add('now-playing'); active.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
 }
 
 function closePlayer() {
   video.pause();
   video.src = '';
-  playerView.classList.remove('active');
-  homeView.classList.add('active');
+  document.body.classList.remove('player-open');
+  document.querySelectorAll('.v-card').forEach(function (c) { c.classList.remove('now-playing'); });
   announce('Returned to library');
 }
 
@@ -1087,7 +1150,7 @@ document.addEventListener('fullscreenchange', function () {
 
 /* ── Keyboard shortcuts ── */
 document.addEventListener('keydown', function (e) {
-  if (!playerView.classList.contains('active')) return;
+  if (!document.body.classList.contains('player-open')) return;
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
   if (e.key === ' ' || e.key === 'k') {
     e.preventDefault();
@@ -1195,7 +1258,7 @@ var folderOverlay = document.getElementById('folderOverlay');
 var folderBox     = document.getElementById('folderBox');
 
 document.getElementById('folderBtn').addEventListener('click', openFolderSettings);
-folderOverlay.addEventListener('click', function (e) { if (e.target === folderOverlay) closeFolderSettings(); });
+onBackdropClick(folderOverlay, closeFolderSettings);
 
 function closeFolderSettings() {
   folderOverlay.classList.add('hidden');
@@ -1285,8 +1348,8 @@ var ADMIN_CATEGORIES  = Object.keys(CAT_ACCENTS).concat(['General']);
 
 document.getElementById('adminBtn').addEventListener('click', openAdminAuth);
 
-adminAuthOverlay.addEventListener('click', function (e) { if (e.target === adminAuthOverlay) closeAdminAuth(); });
-adminPanelOverlay.addEventListener('click', function (e) { if (e.target === adminPanelOverlay) closeAdminPanel(); });
+onBackdropClick(adminAuthOverlay, closeAdminAuth);
+onBackdropClick(adminPanelOverlay, closeAdminPanel);
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   if (!adminPanelOverlay.classList.contains('hidden')) closeAdminPanel();
@@ -1299,6 +1362,8 @@ async function openAdminAuth() {
     showToast('Admin mode is only available in the desktop app');
     return;
   }
+  // Already authenticated this session — go straight to the panel.
+  if (adminPassword !== null) { openAdminPanel(); return; }
   adminAuthBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#78716C;">Checking admin setup&hellip;</p>';
   adminAuthOverlay.classList.remove('hidden');
   try {
@@ -1317,7 +1382,7 @@ function closeAdminAuth() {
 function closeAdminPanel() {
   adminPanelOverlay.classList.add('hidden');
   adminPanelBox.innerHTML = '';
-  adminPassword = null;
+  // adminPassword is intentionally kept so the panel reopens without re-auth this session.
 }
 
 function renderAdminSetup() {
