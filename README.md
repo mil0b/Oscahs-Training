@@ -15,7 +15,7 @@ A Windows desktop app (built with [Tauri](https://tauri.app)) for browsing and p
 ### First-time installation
 
 1. Go to the [Releases page](https://github.com/mil0b/Oscahs-Training/releases) and download the `.exe` installer from the latest release.
-2. Run the installer — if Windows SmartScreen appears, click **More info → Run anyway**. Click through the prompts. No restart is required.
+2. Run the installer — it will ask for admin permission (required to install to Program Files). Click through the prompts. No restart is required.
 3. The app appears in your Start menu as **Oscahs Training**.
 
 That's it. You only ever need to do this once — all future updates install themselves automatically.

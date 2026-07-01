@@ -90,14 +90,23 @@ fn find_dropbox_root() -> Option<PathBuf> {
         .map(|h| PathBuf::from(h).join("Dropbox"))
 }
 
+fn default_training_folder() -> Option<PathBuf> {
+    // Try the known shared OSCAHS Dropbox path first.
+    let known = PathBuf::from(r"C:\Users\oscahs\OSCAHS Dropbox\Oscahs Team\Magicbooking Training");
+    if known.exists() {
+        return Some(known);
+    }
+    // Fall back to the current user's Dropbox (handles dev / non-shared machines).
+    find_dropbox_root().map(|p| p.join("Oscahs Team").join("Magicbooking Training"))
+}
+
 fn training_folder() -> Result<PathBuf, String> {
     let config = read_config();
     if let Some(custom) = config.training_folder {
         return Ok(PathBuf::from(custom));
     }
-    let dropbox = find_dropbox_root()
-        .ok_or("Dropbox folder not found. Use the folder icon in the top bar to set the training folder path manually.")?;
-    Ok(dropbox.join("Oscahs Team").join("Magicbooking Training"))
+    default_training_folder()
+        .ok_or_else(|| "Training folder not found. Use the folder icon in the top bar to set the path manually.".into())
 }
 
 fn admin_file_path() -> Result<PathBuf, String> {
@@ -261,8 +270,8 @@ fn admin_change_password(current_password: String, new_password: String) -> Resu
 #[tauri::command]
 fn get_training_folder() -> serde_json::Value {
     let config = read_config();
-    let auto_path = find_dropbox_root()
-        .map(|p| p.join("Oscahs Team").join("Magicbooking Training").to_string_lossy().into_owned());
+    let auto_path = default_training_folder()
+        .map(|p| p.to_string_lossy().into_owned());
     let effective = config.training_folder.clone().or_else(|| auto_path.clone());
     serde_json::json!({
         "path": effective,
