@@ -156,7 +156,8 @@ fn scan_videos() -> Result<Vec<VideoResult>, String> {
 
     let manifest = read_manifest(&folder);
 
-    let mut mp4s: Vec<PathBuf> = std::fs::read_dir(&folder)
+    // Collect all MP4 files into a map keyed by filename for O(1) lookup.
+    let mut mp4_map: std::collections::HashMap<String, PathBuf> = std::fs::read_dir(&folder)
         .map_err(|e| e.to_string())?
         .filter_map(|e| e.ok().map(|e| e.path()))
         .filter(|p| {
@@ -165,35 +166,47 @@ fn scan_videos() -> Result<Vec<VideoResult>, String> {
                 .map(|e| e.eq_ignore_ascii_case("mp4"))
                 .unwrap_or(false)
         })
-        .collect();
-    mp4s.sort();
-
-    let results = mp4s
-        .into_iter()
-        .map(|path| {
-            let filename = path
-                .file_name()
-                .and_then(|n| n.to_str())
-                .unwrap_or("")
-                .to_string();
-            let meta = manifest
-                .iter()
-                .find(|m| m.filename.as_deref() == Some(filename.as_str()));
-            VideoResult {
-                title: meta
-                    .and_then(|m| m.title.as_deref())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| title_from_filename(&filename)),
-                description: meta.and_then(|m| m.description.clone()),
-                category: meta.and_then(|m| m.category.clone()),
-                chapters: meta
-                    .and_then(|m| m.chapters.clone())
-                    .unwrap_or_default(),
-                path: path.to_string_lossy().into_owned(),
-                filename,
-            }
+        .filter_map(|p| {
+            let name = p.file_name()?.to_str()?.to_string();
+            Some((name, p))
         })
         .collect();
+
+    let mut results = Vec::new();
+
+    // Manifest entries first, in their saved order.
+    for entry in &manifest {
+        if let Some(filename) = &entry.filename {
+            if let Some(path) = mp4_map.remove(filename.as_str()) {
+                results.push(VideoResult {
+                    title: entry
+                        .title
+                        .as_deref()
+                        .map(str::to_string)
+                        .unwrap_or_else(|| title_from_filename(filename)),
+                    description: entry.description.clone(),
+                    category: entry.category.clone(),
+                    chapters: entry.chapters.clone().unwrap_or_default(),
+                    path: path.to_string_lossy().into_owned(),
+                    filename: filename.clone(),
+                });
+            }
+        }
+    }
+
+    // Any files not yet in the manifest go at the end, alphabetically.
+    let mut remaining: Vec<(String, PathBuf)> = mp4_map.into_iter().collect();
+    remaining.sort_by(|a, b| a.0.cmp(&b.0));
+    for (filename, path) in remaining {
+        results.push(VideoResult {
+            title: title_from_filename(&filename),
+            description: None,
+            category: None,
+            chapters: vec![],
+            path: path.to_string_lossy().into_owned(),
+            filename,
+        });
+    }
 
     Ok(results)
 }
@@ -294,6 +307,7 @@ pub fn run() {
         })
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             scan_videos,
             get_training_folder,

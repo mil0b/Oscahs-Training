@@ -1,0 +1,13 @@
+{
+  "name": "oscahs-e2e-tests",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "build-app": "cd .. && cargo build"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  }
+}

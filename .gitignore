@@ -1,2 +1,6 @@
 WINDOWS_SETUP.md
 /prototype
+/tests/node_modules
+/tests/playwright-report
+/tests/test-results
+/tests/.pid

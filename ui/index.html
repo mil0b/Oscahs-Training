@@ -414,7 +414,15 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
 }
 .admin-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .admin-video-item { border: 1.5px solid #F1F0EF; border-radius: 1rem; padding: 1rem 1.1rem; margin-bottom: 0.9rem; }
-.admin-video-fname { font-family: Lato,sans-serif; font-size: 0.68rem; color: #A8A29E; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.2rem; }
+.admin-video-fname { font-family: Lato,sans-serif; font-size: 0.68rem; color: #A8A29E; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.admin-video-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.2rem; gap: 8px; }
+.move-btn {
+  width: 26px; height: 26px; border-radius: 6px; border: 1.5px solid #F1F0EF;
+  background: transparent; cursor: pointer; color: #A8A29E; font-size: 0.7rem;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 1;
+}
+.move-btn:hover:not(:disabled) { border-color: #E6007E; color: #E6007E; background: #FFF0F9; }
+.move-btn:disabled { opacity: 0.25; cursor: default; }
 .chapter-row { display: flex; gap: 0.5rem; margin-bottom: 0.4rem; align-items: center; }
 .chapter-row input[type="number"] { width: 92px; flex-shrink: 0; }
 .chapter-row input[type="text"] { flex: 1; }
@@ -1206,7 +1214,10 @@ function renderFolderSettings(info) {
       : ' <span style="color:#A8A29E;font-size:0.75rem;margin-left:6px;">auto-detected</span>') +
     '</div>' +
     '<p class="field-label">Set a custom path</p>' +
-    '<input class="field-input" type="text" id="folderInput" placeholder="e.g. D:\\Dropbox\\Oscahs Team\\Magicbooking Training" value="' + (info.is_override ? esc(info.path || '') : '') + '">' +
+    '<div style="display:flex;gap:8px;align-items:center;">' +
+    '<input class="field-input" type="text" id="folderInput" style="flex:1;min-width:0;" placeholder="e.g. D:\\Dropbox\\Oscahs Team\\Magicbooking Training" value="' + (info.is_override ? esc(info.path || '') : '') + '">' +
+    '<button type="button" id="folderBrowseBtn" class="btn-secondary" style="white-space:nowrap;flex-shrink:0;">Browse&hellip;</button>' +
+    '</div>' +
     '<p style="font-family:Lato,sans-serif;font-size:0.78rem;color:#A8A29E;margin:6px 0 1.25rem;">Leave blank to auto-detect from Dropbox. Changes take effect on next video load.</p>' +
     '<div class="modal-error" id="folderError" style="display:none;"></div>' +
     '<div class="modal-actions">' +
@@ -1218,6 +1229,11 @@ function renderFolderSettings(info) {
 
   document.getElementById('folderCloseX').onclick = closeFolderSettings;
   document.getElementById('folderCancelBtn').onclick = closeFolderSettings;
+  document.getElementById('folderInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('folderSaveBtn').click(); });
+  document.getElementById('folderBrowseBtn').addEventListener('click', async function () {
+    var selected = await window.__TAURI__.dialog.open({ directory: true, multiple: false, title: 'Select training folder' });
+    if (selected) document.getElementById('folderInput').value = selected;
+  });
   if (info.is_override) {
     document.getElementById('folderResetBtn').onclick = async function () {
       try {
@@ -1307,6 +1323,8 @@ function renderAdminSetup() {
     + '</div>';
   document.getElementById('authCloseBtn').addEventListener('click', closeAdminAuth);
   document.getElementById('authCancelBtn').addEventListener('click', closeAdminAuth);
+  document.getElementById('setupPw1').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('setupPw2').focus(); });
+  document.getElementById('setupPw2').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('setupSubmitBtn').click(); });
   document.getElementById('setupSubmitBtn').addEventListener('click', async function () {
     var pw1 = document.getElementById('setupPw1').value;
     var pw2 = document.getElementById('setupPw2').value;
@@ -1388,8 +1406,16 @@ function renderAdminPanel() {
   }
 
   adminEntries.forEach(function (entry, idx) {
+    var isFirst = idx === 0;
+    var isLast  = idx === adminEntries.length - 1;
     html += '<div class="admin-video-item" data-idx="' + idx + '">'
-      + '<div class="admin-video-fname">' + esc(entry.filename) + '</div>'
+      + '<div class="admin-video-hdr">'
+      +   '<div class="admin-video-fname">' + esc(entry.filename) + '</div>'
+      +   '<div style="display:flex;gap:4px;flex-shrink:0;">'
+      +     '<button type="button" class="move-btn move-up-btn" aria-label="Move up"' + (isFirst ? ' disabled' : '') + '>&#9650;</button>'
+      +     '<button type="button" class="move-btn move-dn-btn" aria-label="Move down"' + (isLast  ? ' disabled' : '') + '>&#9660;</button>'
+      +   '</div>'
+      + '</div>'
       + '<label class="field-label">Title</label>'
       + '<input class="field-input admin-title" type="text" value="' + esc(entry.title) + '">'
       + '<label class="field-label">Description</label>'
@@ -1435,6 +1461,16 @@ function renderAdminPanel() {
     itemEl.querySelectorAll('.chapter-row').forEach(function (rowEl) { wireChapterRow(rowEl, idx); });
     itemEl.querySelector('.add-chapter-btn').addEventListener('click', function () {
       adminEntries[idx].chapters.push({ time: 0, title: '' });
+      renderAdminPanel();
+    });
+    var upBtn = itemEl.querySelector('.move-up-btn');
+    var dnBtn = itemEl.querySelector('.move-dn-btn');
+    if (upBtn && !upBtn.disabled) upBtn.addEventListener('click', function () {
+      adminEntries.splice(idx - 1, 0, adminEntries.splice(idx, 1)[0]);
+      renderAdminPanel();
+    });
+    if (dnBtn && !dnBtn.disabled) dnBtn.addEventListener('click', function () {
+      adminEntries.splice(idx + 1, 0, adminEntries.splice(idx, 1)[0]);
       renderAdminPanel();
     });
   });
@@ -1506,6 +1542,9 @@ function openChangePassword() {
   }
   document.getElementById('authCloseBtn').addEventListener('click', backToPanel);
   document.getElementById('authCancelBtn').addEventListener('click', backToPanel);
+  document.getElementById('curPw').addEventListener('keydown',  function (e) { if (e.key === 'Enter') document.getElementById('newPw1').focus(); });
+  document.getElementById('newPw1').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('newPw2').focus(); });
+  document.getElementById('newPw2').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('changePwSubmitBtn').click(); });
   document.getElementById('changePwSubmitBtn').addEventListener('click', async function () {
     var err = document.getElementById('authError');
     err.classList.remove('show');
