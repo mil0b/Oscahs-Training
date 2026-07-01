@@ -154,7 +154,7 @@ cd src-tauri
 cargo tauri build
 ```
 
-Output: `src-tauri/target/release/bundle/msi/Oscahs Training_<version>_x64_en-US.msi`
+Output: `src-tauri/target/release/bundle/nsis/Oscahs Training_<version>_x64-setup.exe`
 
 ## Development workflow
 
