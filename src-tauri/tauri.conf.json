@@ -41,7 +41,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEZDNkUzODNCODBBOTc2NTIKUldSU2RxbUFPemh1L0M4bWZvUVZ1aGEyQ0Z6RVd1eEFnS1NWWkxNempGT3Vvem41SEplenBRZzQK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI2QTVFQjhDNkZEMThDMTkKUldRWmpORnZqT3VsSmd3bWIvOVJsNW9YdXlFdXN1UWt6RHhYbEdLUzJSV1I1Ui9BYS9NZklsQTUK",
       "endpoints": [
         "https://github.com/mil0b/Oscahs-Training/releases/latest/download/latest.json"
       ]
