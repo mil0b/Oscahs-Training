@@ -14,8 +14,8 @@ A Windows desktop app (built with [Tauri](https://tauri.app)) for browsing and p
 
 ### First-time installation
 
-1. Go to the [Releases page](https://github.com/mil0b/Oscahs-Training/releases) and download the `.msi` file from the latest release.
-2. Run the installer — click through the standard Windows prompts. No restart is required.
+1. Go to the [Releases page](https://github.com/mil0b/Oscahs-Training/releases) and download the `.exe` installer from the latest release.
+2. Run the installer — if Windows SmartScreen appears, click **More info → Run anyway**. Click through the prompts. No restart is required.
 3. The app appears in your Start menu as **Oscahs Training**.
 
 That's it. You only ever need to do this once — all future updates install themselves automatically.
@@ -162,7 +162,7 @@ There are two GitHub Actions workflows. Understanding the difference between the
 
 | What you do | Workflow that runs | What it produces | Triggers staff auto-updates? |
 |---|---|---|---|
-| `git push` to `main` | `Build Windows Installer` | Downloadable MSI artifact in Actions (expires after 90 days) | **No** |
+| `git push` to `main` | `Build Windows Installer` | Downloadable NSIS installer artifact in Actions (expires after 30 days) | **No** |
 | `git tag vX.Y.Z && git push origin vX.Y.Z` | `Release` | Signed GitHub Release + `latest.json` | **Yes** |
 
 This gives you an implicit staging step: push your changes, download the artifact from the Actions run, install it on a test machine, and verify it before tagging. Only the tag triggers the release that auto-updates all staff.
@@ -184,7 +184,7 @@ This gives you an implicit staging step: push your changes, download the artifac
    git commit -m "..."
    git push
    ```
-4. Go to **Actions → Build Windows Installer → latest run** and download the MSI artifact. Install it on a test machine and verify.
+4. Go to **Actions → Build Windows Installer → latest run** and download the installer artifact. Install it on a test machine and verify.
 5. When happy, bump `version` in `src-tauri/tauri.conf.json` (e.g. `0.1.0` → `0.2.0`), commit, then tag and push:
    ```bash
    git add src-tauri/tauri.conf.json
