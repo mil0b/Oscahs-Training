@@ -12,11 +12,7 @@
   src: url("fonts/Solomon-Sans-Book.woff") format("woff");
   font-weight: 400; font-style: normal; font-display: swap;
 }
-@font-face {
-  font-family: "Solomon Sans";
-  src: url("fonts/Solomon-Sans-Bold.woff2") format("woff2");
-  font-weight: 700; font-style: normal; font-display: swap;
-}
+
 @font-face {
   font-family: "Solomon Sans";
   src: url("fonts/Solomon-Sans-Black.woff") format("woff");
@@ -216,6 +212,9 @@ body.player-open .empty-state { padding: 2rem 0.75rem; }
 .card-thumb {
   height: 160px; display: flex; align-items: center; justify-content: center;
   position: relative; overflow: hidden;
+}
+.card-thumb-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
 }
 .play-circle {
   width: 56px; height: 56px; border-radius: 50%;
@@ -491,6 +490,52 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
   margin-top: 1.25rem; padding-top: 0.9rem; border-top: 1px solid #F1F0EF;
   font-family: Lato,sans-serif; font-size: 0.72rem; color: #A8A29E; text-align: center;
 }
+.storage-bar-box { margin-bottom: 1.25rem; }
+.storage-bar-label {
+  display: flex; justify-content: space-between; font-family: Lato,sans-serif;
+  font-size: 0.72rem; font-weight: 700; color: #78716C; margin-bottom: 4px;
+}
+.storage-bar-track { height: 8px; border-radius: 99px; background: #F1F0EF; overflow: hidden; }
+.storage-bar-fill { height: 100%; background: #E6007E; border-radius: 99px; transition: width 0.3s; }
+.storage-bar-fill.warn { background: #E94E1B; }
+.delete-video-btn {
+  background: none; border: 1.5px solid #F1F0EF; color: #A8A29E; border-radius: 6px;
+  padding: 4px 9px; font-family: Lato,sans-serif; font-size: 0.7rem; font-weight: 700;
+  cursor: pointer; flex-shrink: 0;
+}
+.delete-video-btn:hover { border-color: #C2006A; color: #C2006A; background: #FFF0F9; }
+.replace-video-btn {
+  background: none; border: 1.5px solid #F1F0EF; color: #78716C; border-radius: 6px;
+  padding: 4px 9px; font-family: Lato,sans-serif; font-size: 0.7rem; font-weight: 700;
+  cursor: pointer; flex-shrink: 0;
+}
+.replace-video-btn:hover { border-color: #E6007E; color: #E6007E; background: #FFF0F9; }
+.add-video-btn {
+  background: transparent; border: 1.5px dashed #D6D3D1; color: #57534E; border-radius: 0.75rem;
+  padding: 0.7rem 1rem; font-family: Lato,sans-serif; font-size: 0.85rem; font-weight: 800;
+  cursor: pointer; width: 100%; margin-bottom: 1rem;
+}
+.add-video-btn:hover { border-color: #E6007E; color: #E6007E; }
+.upload-progress-wrap { margin-top: 0.5rem; }
+.upload-progress-track { height: 6px; border-radius: 99px; background: #F1F0EF; overflow: hidden; }
+.upload-progress-fill { height: 100%; background: #95C11F; border-radius: 99px; transition: width 0.15s; }
+.upload-progress-label { font-family: Lato,sans-serif; font-size: 0.72rem; color: #78716C; margin-top: 3px; }
+.cat-manage-section { border-top: 1px solid #F1F0EF; margin-top: 1.25rem; padding-top: 1.1rem; }
+.cat-manage-row { display: flex; gap: 6px; align-items: center; margin-bottom: 0.5rem; }
+.cat-manage-row input[type="text"] { flex: 1; min-width: 0; }
+.cat-manage-row input[type="color"] { width: 32px; height: 32px; padding: 2px; border: 1.5px solid #F1F0EF; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
+.cat-remove-btn {
+  background: none; border: none; color: #A8A29E; cursor: pointer; font-size: 1.05rem;
+  padding: 2px 6px; flex-shrink: 0; line-height: 1;
+}
+.cat-remove-btn:hover { color: #E6007E; }
+[data-theme="dark"] .storage-bar-track { background: #3E3B3B; }
+[data-theme="dark"] .storage-bar-label { color: #9CA3AF; }
+[data-theme="dark"] .delete-video-btn, [data-theme="dark"] .replace-video-btn { border-color: #3E3B3B; color: #9CA3AF; }
+[data-theme="dark"] .add-video-btn { border-color: #3E3B3B; color: #D1D5DB; }
+[data-theme="dark"] .upload-progress-track { background: #3E3B3B; }
+[data-theme="dark"] .cat-manage-section { border-color: #3E3B3B; }
+[data-theme="dark"] .cat-manage-row input[type="color"] { border-color: #3E3B3B; }
 
 /* ── UPDATE BAR ── */
 .update-bar {
@@ -567,11 +612,6 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
     <div class="hdr-divider"></div>
     <span class="hdr-label">Training Library</span>
     <div class="hdr-spacer"></div>
-    <button class="theme-btn" id="folderBtn" aria-label="Training folder settings" title="Training folder settings">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-      </svg>
-    </button>
     <button class="theme-btn" id="adminBtn" aria-label="Admin" title="Admin">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="17" height="17">
         <circle cx="12" cy="12" r="3"/>
@@ -612,7 +652,7 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
     <div id="emptyState" class="empty-state" style="display:none;">
       <div class="empty-icon">&#127916;</div>
       <h2 class="empty-title">No videos found</h2>
-      <p class="empty-desc">No videos matched that filter, or no videos have been added to the Dropbox training folder yet.</p>
+      <p class="empty-desc">No videos matched that filter, or no videos have been added to the training library yet.</p>
     </div>
   </main>
 
@@ -716,10 +756,6 @@ video::cue { background: rgba(0,0,0,0.78); color: #fff; font-family: Lato,sans-s
   <div class="modal-box wide" id="adminPanelBox"></div>
 </div>
 
-<div class="modal-overlay hidden" id="folderOverlay">
-  <div class="modal-box" id="folderBox"></div>
-</div>
-
 <!-- ═══════════ CLOSE CONFIRMATION ═══════════ -->
 <div class="modal-overlay hidden" id="closeConfirmOverlay" style="z-index:9000">
   <div class="modal-box" style="max-width:360px;text-align:center">
@@ -755,17 +791,14 @@ var THUMB_COLORS = [
   { bg: 'linear-gradient(135deg,#951B81 0%,#D44DC4 100%)', fg: 'white' },
 ];
 
-var CAT_ACCENTS = {
-  'MagicBooking':    { accent: '#E6007E', bg: '#FFF0F9' },
-  'Health & Safety': { accent: '#E94E1B', bg: '#FFF3EE' },
-  'Finance':         { accent: '#00B2CF', bg: '#E6F8FC' },
-  'HR':              { accent: '#95C11F', bg: '#F2FAE6' },
-  'Customer Service':{ accent: '#951B81', bg: '#F9EDF8' },
-  'Operations':      { accent: '#FFCA00', bg: '#FFFBE6' },
-};
+/* Categories are fetched from the API (categories.json in R2) so admins can
+   add/edit them without shipping a new app release. */
+var API_BASE = 'https://oscahs-training-api.jonathan-0ba.workers.dev';
+var CATEGORIES = [];
 
 function catStyle(cat) {
-  return CAT_ACCENTS[cat] || { accent: '#302E2E', bg: '#F1F0EF' };
+  var found = CATEGORIES.filter(function (c) { return c.name === cat; })[0];
+  return found ? { accent: found.accent, bg: found.bg } : { accent: '#302E2E', bg: '#F1F0EF' };
 }
 
 var FALLBACK_VIDEOS = [
@@ -811,31 +844,33 @@ var emptyState   = document.getElementById('emptyState');
 var catFilterRow = document.getElementById('catFilterRow');
 var srLive = document.getElementById('srLive');
 
-/* ── Tauri video loading ── */
+/* ── Video loading (from the Cloudflare Worker) ── */
 async function loadVideos() {
-  if (window.__TAURI__) {
-    try {
-      var results = await window.__TAURI__.core.invoke('scan_videos');
-      if (results && results.length > 0) {
-        VIDEOS = results.map(function (v) {
-          return {
-            title:       v.title,
-            category:    v.category || guessCategory(v.title),
-            description: v.description || '',
-            url:         window.__TAURI__.core.convertFileSrc(v.path),
-            filename:    v.filename,
-            chapters:    (v.chapters || []).map(function (ch) {
-              return { time: ch.time, title: ch.title };
-            }),
-          };
-        });
-        return;
-      }
-    } catch (e) {
-      console.warn('scan_videos failed:', e);
+  try {
+    var res = await fetch(API_BASE + '/manifest');
+    if (!res.ok) throw new Error('Manifest fetch failed: ' + res.status);
+    var data = await res.json();
+    CATEGORIES = data.categories || [];
+    if (data.videos && data.videos.length > 0) {
+      VIDEOS = data.videos.map(function (v) {
+        return {
+          title:       v.title,
+          category:    v.category || guessCategory(v.title),
+          description: v.description || '',
+          url:         API_BASE + '/video/' + encodeURIComponent(v.filename),
+          filename:    v.filename,
+          chapters:    (v.chapters || []).map(function (ch) {
+            return { time: ch.time, title: ch.title };
+          }),
+        };
+      });
+      return;
     }
+    VIDEOS = [];
+  } catch (e) {
+    console.warn('manifest fetch failed:', e);
+    VIDEOS = FALLBACK_VIDEOS;
   }
-  VIDEOS = FALLBACK_VIDEOS;
 }
 
 function guessCategory(title) {
@@ -943,6 +978,9 @@ function renderGrid() {
 
     card.innerHTML =
       '<div class="card-thumb" style="background:' + col.bg + ';">'
+    + (v.filename
+        ? '<img class="card-thumb-img" src="' + API_BASE + '/thumbnail/' + encodeURIComponent(v.filename) + '" alt="" loading="lazy" onerror="this.remove()">'
+        : '')
     +   '<div class="play-circle">'
     +     '<svg class="play-icon-svg" viewBox="0 0 24 24" fill="#302E2E"><polygon points="5 3 19 12 5 21 5 3"/></svg>'
     +   '</div>'
@@ -1253,98 +1291,14 @@ document.getElementById('themeBtn').addEventListener('click', function () {
   showToast(next === 'dark' ? 'Dark mode on' : 'Light mode on');
 });
 
-/* ── Folder Settings ── */
-var folderOverlay = document.getElementById('folderOverlay');
-var folderBox     = document.getElementById('folderBox');
-
-document.getElementById('folderBtn').addEventListener('click', openFolderSettings);
-onBackdropClick(folderOverlay, closeFolderSettings);
-
-function closeFolderSettings() {
-  folderOverlay.classList.add('hidden');
-  folderBox.innerHTML = '';
-}
-
-async function openFolderSettings() {
-  if (!window.__TAURI__) { showToast('Only available in the desktop app'); return; }
-  folderBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#78716C;padding:2rem;">Loading&hellip;</p>';
-  folderOverlay.classList.remove('hidden');
-  try {
-    var info = await window.__TAURI__.core.invoke('get_training_folder');
-    renderFolderSettings(info);
-  } catch (e) {
-    folderBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#C2006A;padding:2rem;">Error: ' + esc(String(e)) + '</p>';
-  }
-}
-
-function renderFolderSettings(info) {
-  var html =
-    '<button class="modal-close-x" id="folderCloseX">&times;</button>' +
-    '<h2 style="font-family:var(--font-heading);font-weight:900;font-size:1.3rem;margin-bottom:0.75rem;">Training Folder</h2>' +
-    '<p style="font-family:Lato,sans-serif;font-size:0.82rem;color:#78716C;margin:0 0 1rem;">Where the app looks for videos and metadata. This setting is local to this machine only.</p>' +
-    '<p class="field-label">Current path</p>' +
-    '<div style="font-family:Lato,sans-serif;font-size:0.82rem;color:#57534E;background:#F8F7F4;border:1.5px solid #E5E7EB;border-radius:8px;padding:10px 12px;margin-bottom:1.25rem;word-break:break-all;">' +
-    esc(info.path || 'Not detected') +
-    (info.is_override
-      ? ' <span style="color:#E6007E;font-size:0.75rem;font-weight:700;margin-left:6px;">custom</span>'
-      : ' <span style="color:#A8A29E;font-size:0.75rem;margin-left:6px;">auto-detected</span>') +
-    '</div>' +
-    '<p class="field-label">Set a custom path</p>' +
-    '<div style="display:flex;gap:8px;align-items:center;">' +
-    '<input class="field-input" type="text" id="folderInput" style="flex:1;min-width:0;" placeholder="e.g. D:\\Dropbox\\Oscahs Team\\Magicbooking Training" value="' + (info.is_override ? esc(info.path || '') : '') + '">' +
-    '<button type="button" id="folderBrowseBtn" class="btn-secondary" style="white-space:nowrap;flex-shrink:0;">Browse&hellip;</button>' +
-    '</div>' +
-    '<p style="font-family:Lato,sans-serif;font-size:0.78rem;color:#A8A29E;margin:6px 0 1.25rem;">Leave blank to auto-detect from Dropbox. Changes take effect on next video load.</p>' +
-    '<div class="modal-error" id="folderError" style="display:none;"></div>' +
-    '<div class="modal-actions">' +
-    (info.is_override ? '<button class="btn-secondary" id="folderResetBtn">Reset to default</button>' : '') +
-    '<button class="btn-secondary" id="folderCancelBtn">Cancel</button>' +
-    '<button class="btn-primary" id="folderSaveBtn">Save</button>' +
-    '</div>';
-  folderBox.innerHTML = html;
-
-  document.getElementById('folderCloseX').onclick = closeFolderSettings;
-  document.getElementById('folderCancelBtn').onclick = closeFolderSettings;
-  document.getElementById('folderInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') document.getElementById('folderSaveBtn').click(); });
-  document.getElementById('folderBrowseBtn').addEventListener('click', async function () {
-    var selected = await window.__TAURI__.dialog.open({ directory: true, multiple: false, title: 'Select training folder' });
-    if (selected) document.getElementById('folderInput').value = selected;
-  });
-  if (info.is_override) {
-    document.getElementById('folderResetBtn').onclick = async function () {
-      try {
-        await window.__TAURI__.core.invoke('set_training_folder', { path: null });
-        closeFolderSettings();
-        showToast('Folder reset to auto-detect');
-        await loadVideos(); buildCatFilter(); renderGrid();
-      } catch (e) {
-        var el = document.getElementById('folderError');
-        if (el) { el.textContent = String(e); el.style.display = ''; }
-      }
-    };
-  }
-  document.getElementById('folderSaveBtn').onclick = async function () {
-    var val = (document.getElementById('folderInput').value || '').trim();
-    try {
-      await window.__TAURI__.core.invoke('set_training_folder', { path: val || null });
-      closeFolderSettings();
-      showToast(val ? 'Folder path saved' : 'Folder reset to auto-detect');
-      await loadVideos(); buildCatFilter(); renderGrid();
-    } catch (e) {
-      var el = document.getElementById('folderError');
-      if (el) { el.textContent = String(e); el.style.display = ''; }
-    }
-  };
-}
-
 /* ── Admin ── */
 var adminAuthOverlay  = document.getElementById('adminAuthOverlay');
 var adminAuthBox      = document.getElementById('adminAuthBox');
 var adminPanelOverlay = document.getElementById('adminPanelOverlay');
 var adminPanelBox     = document.getElementById('adminPanelBox');
-var adminPassword     = null; // held in memory only for the current admin session, never persisted
+var adminToken        = null; // held in memory only for the current admin session, never persisted
 var adminEntries      = [];
-var ADMIN_CATEGORIES  = Object.keys(CAT_ACCENTS).concat(['General']);
+var adminCategories   = [];
 
 document.getElementById('adminBtn').addEventListener('click', openAdminAuth);
 
@@ -1354,21 +1308,33 @@ document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   if (!adminPanelOverlay.classList.contains('hidden')) closeAdminPanel();
   else if (!adminAuthOverlay.classList.contains('hidden')) closeAdminAuth();
-  else if (!folderOverlay.classList.contains('hidden')) closeFolderSettings();
 });
 
-async function openAdminAuth() {
-  if (!window.__TAURI__) {
-    showToast('Admin mode is only available in the desktop app');
-    return;
+/* Thin wrapper around fetch for the admin API: throws with the server's
+   error message on failure, and surfaces a clear message on session expiry. */
+async function apiPost(path, body) {
+  var res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body || {}),
+  });
+  var data = await res.json().catch(function () { return {}; });
+  if (!res.ok) {
+    if (res.status === 401 && body && body.token) adminToken = null;
+    throw new Error(data.error || ('Request failed (' + res.status + ')'));
   }
+  return data;
+}
+
+async function openAdminAuth() {
   // Already authenticated this session — go straight to the panel.
-  if (adminPassword !== null) { openAdminPanel(); return; }
+  if (adminToken !== null) { openAdminPanel(); return; }
   adminAuthBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#78716C;">Checking admin setup&hellip;</p>';
   adminAuthOverlay.classList.remove('hidden');
   try {
-    var hasAdmin = await window.__TAURI__.core.invoke('admin_status');
-    if (hasAdmin) { renderAdminLogin(); } else { renderAdminSetup(); }
+    var res = await fetch(API_BASE + '/admin/status');
+    var data = await res.json();
+    if (data.exists) { renderAdminLogin(); } else { renderAdminSetup(); }
   } catch (e) {
     adminAuthBox.innerHTML = '<p style="font-family:Lato,sans-serif;color:#C2006A;">Could not reach the admin system: ' + esc(String(e)) + '</p>';
   }
@@ -1382,14 +1348,14 @@ function closeAdminAuth() {
 function closeAdminPanel() {
   adminPanelOverlay.classList.add('hidden');
   adminPanelBox.innerHTML = '';
-  // adminPassword is intentionally kept so the panel reopens without re-auth this session.
+  // adminToken is intentionally kept so the panel reopens without re-auth this session.
 }
 
 function renderAdminSetup() {
   adminAuthBox.innerHTML =
       '<button class="modal-close-x" id="authCloseBtn" aria-label="Close">&times;</button>'
     + '<h2 class="modal-title">Set up admin access</h2>'
-    + '<p class="modal-sub">No admin password exists yet for this team. Create one now &mdash; it is stored as a salted hash (never in plain text) in the shared training folder, so it works for whoever opens Admin Mode, on any machine.</p>'
+    + '<p class="modal-sub">No admin password exists yet for this team. Create one now &mdash; it is stored as a salted hash (never in plain text) in Cloudflare, so it works for whoever opens Admin Mode, on any machine.</p>'
     + '<label class="field-label" for="setupPw1">New admin password</label>'
     + '<input class="field-input" type="password" id="setupPw1" autocomplete="new-password" minlength="6">'
     + '<label class="field-label" for="setupPw2">Confirm password</label>'
@@ -1411,8 +1377,8 @@ function renderAdminSetup() {
     if (pw1.length < 6) { err.textContent = 'Password must be at least 6 characters.'; err.classList.add('show'); return; }
     if (pw1 !== pw2) { err.textContent = 'Passwords do not match.'; err.classList.add('show'); return; }
     try {
-      await window.__TAURI__.core.invoke('admin_setup', { password: pw1 });
-      adminPassword = pw1;
+      var data = await apiPost('/admin/setup', { password: pw1 });
+      adminToken = data.token;
       closeAdminAuth();
       showToast('Admin password created');
       openAdminPanel();
@@ -1447,9 +1413,8 @@ function renderAdminLogin() {
     err.classList.remove('show');
     var pw = pwInput.value;
     try {
-      var ok = await window.__TAURI__.core.invoke('admin_login', { password: pw });
-      if (!ok) { err.textContent = 'Incorrect password.'; err.classList.add('show'); return; }
-      adminPassword = pw;
+      var data = await apiPost('/admin/login', { password: pw });
+      adminToken = data.token;
       closeAdminAuth();
       openAdminPanel();
     } catch (e) {
@@ -1458,6 +1423,8 @@ function renderAdminLogin() {
     }
   }
 }
+
+var pendingReplaceFilename = null;
 
 function openAdminPanel() {
   adminEntries = VIDEOS.filter(function (v) { return v.filename; }).map(function (v) {
@@ -1469,18 +1436,162 @@ function openAdminPanel() {
       chapters: (v.chapters || []).map(function (c) { return { time: c.time, title: c.title }; }),
     };
   });
+  adminCategories = CATEGORIES.map(function (c) { return { name: c.name, accent: c.accent, bg: c.bg }; });
   renderAdminPanel();
   adminPanelOverlay.classList.remove('hidden');
+  loadStorageUsage();
+}
+
+async function loadStorageUsage() {
+  var box = document.getElementById('storageBarBox');
+  if (!box) return;
+  try {
+    var data = await apiPost('/admin/storage', { token: adminToken });
+    var pct = Math.min(100, (data.usedBytes / data.totalBytes) * 100);
+    var usedGb = (data.usedBytes / 1024 / 1024 / 1024).toFixed(2);
+    var totalGb = (data.totalBytes / 1024 / 1024 / 1024).toFixed(0);
+    box.innerHTML =
+        '<div class="storage-bar-label"><span>Storage used</span><span>' + usedGb + ' GB of ' + totalGb + ' GB (free tier)</span></div>'
+      + '<div class="storage-bar-track"><div class="storage-bar-fill' + (pct > 85 ? ' warn' : '') + '" style="width:' + pct + '%"></div></div>';
+  } catch (e) {
+    box.innerHTML = '';
+  }
+}
+
+function titleFromFilenameJs(name) {
+  var stem = name.replace(/\.mp4$/i, '');
+  return stem.replace(/[-_]/g, ' ').split(/\s+/).filter(Boolean).map(function (w) {
+    return w.charAt(0).toUpperCase() + w.slice(1);
+  }).join(' ');
+}
+
+function tintFromAccent(hex) {
+  var r = parseInt(hex.slice(1, 3), 16), g = parseInt(hex.slice(3, 5), 16), b = parseInt(hex.slice(5, 7), 16);
+  var mix = function (c) { return Math.round(c + (255 - c) * 0.9); };
+  return '#' + [mix(r), mix(g), mix(b)].map(function (v) { return v.toString(16).padStart(2, '0'); }).join('');
+}
+
+/* Grabs a frame from the local file (before upload) so we never need to
+   download video bytes just to render a grid thumbnail later. */
+function captureThumbnail(file) {
+  return new Promise(function (resolve) {
+    var video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.preload = 'metadata';
+    var url = URL.createObjectURL(file);
+    var done = false;
+    function finish(blob) {
+      if (done) return;
+      done = true;
+      URL.revokeObjectURL(url);
+      resolve(blob);
+    }
+    var timeout = setTimeout(function () { finish(null); }, 8000);
+    video.addEventListener('loadeddata', function () {
+      video.currentTime = Math.min(0.1, (video.duration || 0.2) / 2);
+    });
+    video.addEventListener('seeked', function () {
+      try {
+        var canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) { clearTimeout(timeout); finish(blob); }, 'image/jpeg', 0.82);
+      } catch (e) {
+        clearTimeout(timeout); finish(null);
+      }
+    });
+    video.addEventListener('error', function () { clearTimeout(timeout); finish(null); });
+    video.src = url;
+  });
+}
+
+function uploadThumbnail(blob, videoFilename) {
+  return apiPost('/admin/thumbnail-upload-url', { token: adminToken, filename: videoFilename }).then(function (data) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('PUT', data.uploadUrl);
+      xhr.setRequestHeader('Content-Type', 'image/jpeg');
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) resolve();
+        else reject(new Error('Thumbnail upload failed (' + xhr.status + ')'));
+      };
+      xhr.onerror = function () { reject(new Error('Thumbnail upload failed (network error)')); };
+      xhr.send(blob);
+    });
+  });
+}
+
+function uploadVideoFile(file, existingFilename, onProgress) {
+  var filename = existingFilename || file.name;
+  return apiPost('/admin/upload-url', { token: adminToken, filename: filename, size: file.size }).then(function (data) {
+    return new Promise(function (resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('PUT', data.uploadUrl);
+      xhr.setRequestHeader('Content-Type', 'video/mp4');
+      xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total);
+      };
+      xhr.onload = function () {
+        if (xhr.status >= 200 && xhr.status < 300) resolve({ filename: filename });
+        else reject(new Error('Upload failed (' + xhr.status + ')'));
+      };
+      xhr.onerror = function () { reject(new Error('Upload failed (network error)')); };
+      xhr.send(file);
+    });
+  });
+}
+
+async function runUpload(file, existingFilename) {
+  var err = document.getElementById('panelError');
+  err.classList.remove('show');
+  var progressEl = document.getElementById('uploadProgress');
+  progressEl.style.display = '';
+  progressEl.innerHTML =
+      '<div class="upload-progress-track"><div class="upload-progress-fill" id="uploadFillBar" style="width:0%"></div></div>'
+    + '<div class="upload-progress-label" id="uploadLabel">Uploading ' + esc(file.name) + '&hellip; 0%</div>';
+  try {
+    await uploadVideoFile(file, existingFilename, function (frac) {
+      var bar = document.getElementById('uploadFillBar');
+      var lbl = document.getElementById('uploadLabel');
+      if (bar) bar.style.width = (frac * 100) + '%';
+      if (lbl) lbl.textContent = 'Uploading ' + file.name + '… ' + Math.round(frac * 100) + '%';
+    });
+    progressEl.style.display = 'none';
+    if (!existingFilename) {
+      adminEntries.push({ filename: file.name, title: titleFromFilenameJs(file.name), description: '', category: '', chapters: [] });
+    }
+    // Thumbnail generation is best-effort — the video upload already succeeded, so a
+    // thumbnail failure shouldn't be treated as an error the admin needs to act on.
+    try {
+      var thumbBlob = await captureThumbnail(file);
+      if (thumbBlob) await uploadThumbnail(thumbBlob, existingFilename || file.name);
+    } catch (e) {
+      console.warn('thumbnail generation/upload failed:', e);
+    }
+    showToast(existingFilename ? 'File replaced' : 'Video uploaded — add details, then Save changes');
+    renderAdminPanel();
+    loadStorageUsage();
+  } catch (e) {
+    progressEl.style.display = 'none';
+    err.textContent = String(e);
+    err.classList.add('show');
+  }
 }
 
 function renderAdminPanel() {
   var html =
       '<button class="modal-close-x" id="panelCloseBtn" aria-label="Close">&times;</button>'
     + '<h2 class="modal-title">Manage videos</h2>'
-    + '<p class="modal-sub">Edit titles, descriptions, categories, and chapters. Saving writes to <code>videos.json</code> in the shared Dropbox folder &mdash; everyone\'s app picks up the change next time they open it.</p>';
+    + '<p class="modal-sub">Edit titles, descriptions, categories, and chapters. Saving syncs to everyone\'s app via Cloudflare.</p>'
+    + '<div class="storage-bar-box" id="storageBarBox"></div>'
+    + '<button type="button" class="add-video-btn" id="addVideoBtn">+ Add video</button>'
+    + '<input type="file" id="addVideoInput" accept="video/mp4,.mp4" style="display:none">'
+    + '<div class="upload-progress-wrap" id="uploadProgress" style="display:none;"></div>';
 
   if (adminEntries.length === 0) {
-    html += '<p style="font-family:Lato,sans-serif;color:#78716C;">No videos found in the training folder yet.</p>';
+    html += '<p style="font-family:Lato,sans-serif;color:#78716C;">No videos uploaded yet.</p>';
   }
 
   adminEntries.forEach(function (entry, idx) {
@@ -1492,6 +1603,8 @@ function renderAdminPanel() {
       +   '<div style="display:flex;gap:4px;flex-shrink:0;">'
       +     '<button type="button" class="move-btn move-up-btn" aria-label="Move up"' + (isFirst ? ' disabled' : '') + '>&#9650;</button>'
       +     '<button type="button" class="move-btn move-dn-btn" aria-label="Move down"' + (isLast  ? ' disabled' : '') + '>&#9660;</button>'
+      +     '<button type="button" class="replace-video-btn" aria-label="Replace file">Replace</button>'
+      +     '<button type="button" class="delete-video-btn" aria-label="Delete video">Delete</button>'
       +   '</div>'
       + '</div>'
       + '<label class="field-label">Title</label>'
@@ -1514,7 +1627,21 @@ function renderAdminPanel() {
       + '</div>';
   });
 
-  html += '<datalist id="adminCatList">' + ADMIN_CATEGORIES.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>';
+  var catNames = adminCategories.map(function (c) { return c.name; }).concat(['General']);
+  html += '<datalist id="adminCatList">' + catNames.map(function (c) { return '<option value="' + esc(c) + '">'; }).join('') + '</datalist>';
+
+  html += '<div class="cat-manage-section">'
+    + '<label class="field-label" style="margin-top:0;">Categories</label>'
+    + adminCategories.map(function (c, ci) {
+        return '<div class="cat-manage-row" data-ci="' + ci + '">'
+          + '<input type="color" class="cat-color-input" value="' + esc(c.accent) + '" aria-label="Category color">'
+          + '<input type="text" class="field-input cat-name-input" value="' + esc(c.name) + '" aria-label="Category name">'
+          + '<button type="button" class="cat-remove-btn" aria-label="Remove category">&times;</button>'
+          + '</div>';
+      }).join('')
+    + '<button type="button" class="add-chapter-btn" id="addCatBtn">+ Add category</button>'
+    + '</div>';
+
   html += '<div class="modal-error" id="panelError"></div>';
   html += '<div class="modal-actions">'
     + '<button class="btn-text" id="changePwBtn" type="button">Change admin password</button>'
@@ -1531,6 +1658,24 @@ function renderAdminPanel() {
   document.getElementById('changePwBtn').addEventListener('click', openChangePassword);
   document.getElementById('panelSaveBtn').addEventListener('click', saveAdminEntries);
 
+  document.getElementById('addVideoBtn').addEventListener('click', function () {
+    pendingReplaceFilename = null;
+    document.getElementById('addVideoInput').click();
+  });
+  document.getElementById('addVideoInput').addEventListener('change', async function () {
+    var file = this.files[0];
+    var replaceFilename = pendingReplaceFilename;
+    pendingReplaceFilename = null;
+    this.value = '';
+    if (!file) return;
+    if (!/\.mp4$/i.test(file.name)) { showToast('Only .mp4 files are supported'); return; }
+    if (!replaceFilename && adminEntries.some(function (e) { return e.filename === file.name; })) {
+      showToast('A video with that filename already exists — use Replace on that entry instead');
+      return;
+    }
+    await runUpload(file, replaceFilename);
+  });
+
   adminPanelBox.querySelectorAll('.admin-video-item').forEach(function (itemEl) {
     var idx = parseInt(itemEl.dataset.idx, 10);
     itemEl.querySelector('.admin-title').addEventListener('input', function () { adminEntries[idx].title = this.value; });
@@ -1540,6 +1685,24 @@ function renderAdminPanel() {
     itemEl.querySelector('.add-chapter-btn').addEventListener('click', function () {
       adminEntries[idx].chapters.push({ time: 0, title: '' });
       renderAdminPanel();
+    });
+    itemEl.querySelector('.replace-video-btn').addEventListener('click', function () {
+      pendingReplaceFilename = adminEntries[idx].filename;
+      document.getElementById('addVideoInput').click();
+    });
+    itemEl.querySelector('.delete-video-btn').addEventListener('click', async function () {
+      if (!confirm('Delete "' + adminEntries[idx].filename + '"? This removes the file from storage permanently.')) return;
+      try {
+        await apiPost('/admin/video/delete', { token: adminToken, filename: adminEntries[idx].filename });
+        adminEntries.splice(idx, 1);
+        showToast('Video deleted');
+        renderAdminPanel();
+        loadStorageUsage();
+      } catch (e) {
+        var err = document.getElementById('panelError');
+        err.textContent = String(e);
+        err.classList.add('show');
+      }
     });
     var upBtn = itemEl.querySelector('.move-up-btn');
     var dnBtn = itemEl.querySelector('.move-dn-btn');
@@ -1551,6 +1714,23 @@ function renderAdminPanel() {
       adminEntries.splice(idx + 1, 0, adminEntries.splice(idx, 1)[0]);
       renderAdminPanel();
     });
+  });
+
+  adminPanelBox.querySelectorAll('.cat-manage-row').forEach(function (rowEl) {
+    var ci = parseInt(rowEl.dataset.ci, 10);
+    rowEl.querySelector('.cat-name-input').addEventListener('input', function () { adminCategories[ci].name = this.value; });
+    rowEl.querySelector('.cat-color-input').addEventListener('input', function () {
+      adminCategories[ci].accent = this.value;
+      adminCategories[ci].bg = tintFromAccent(this.value);
+    });
+    rowEl.querySelector('.cat-remove-btn').addEventListener('click', function () {
+      adminCategories.splice(ci, 1);
+      renderAdminPanel();
+    });
+  });
+  document.getElementById('addCatBtn').addEventListener('click', function () {
+    adminCategories.push({ name: 'New Category', accent: '#302E2E', bg: '#F1F0EF' });
+    renderAdminPanel();
   });
 }
 
@@ -1583,9 +1763,13 @@ async function saveAdminEntries() {
         .sort(function (a, b) { return a.time - b.time; }),
     };
   });
+  var catPayload = adminCategories
+    .map(function (c) { return { name: (c.name || '').trim(), accent: c.accent, bg: c.bg }; })
+    .filter(function (c) { return c.name !== ''; });
   try {
-    await window.__TAURI__.core.invoke('save_videos_manifest', { password: adminPassword, entries: payload });
-    showToast('Saved — synced to everyone via Dropbox');
+    await apiPost('/admin/manifest', { token: adminToken, videos: payload });
+    await apiPost('/admin/categories', { token: adminToken, categories: catPayload });
+    showToast('Saved — synced to everyone via Cloudflare');
     await loadVideos();
     buildCatFilter();
     renderGrid();
@@ -1632,8 +1816,7 @@ function openChangePassword() {
     if (n1.length < 6) { err.textContent = 'New password must be at least 6 characters.'; err.classList.add('show'); return; }
     if (n1 !== n2) { err.textContent = 'New passwords do not match.'; err.classList.add('show'); return; }
     try {
-      await window.__TAURI__.core.invoke('admin_change_password', { currentPassword: cur, newPassword: n1 });
-      adminPassword = n1;
+      await apiPost('/admin/change-password', { token: adminToken, currentPassword: cur, newPassword: n1 });
       showToast('Admin password updated');
       backToPanel();
     } catch (e) {

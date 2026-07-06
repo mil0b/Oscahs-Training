@@ -3,11 +3,9 @@ const { test, expect } = require('../fixtures');
 async function resetHome(page) {
   // Return app to a clean home state without a full reload
   await page.evaluate(() => {
-    document.getElementById('homeView').classList.add('active');
-    document.getElementById('playerView').classList.remove('active');
+    document.body.classList.remove('player-open');
     document.getElementById('adminAuthOverlay').classList.add('hidden');
     document.getElementById('adminPanelOverlay').classList.add('hidden');
-    document.getElementById('folderOverlay').classList.add('hidden');
   });
 }
 
@@ -17,7 +15,7 @@ test.describe('Home view', () => {
   });
 
   test('home view is active on load', async ({ page }) => {
-    await expect(page.locator('#homeView')).toHaveClass(/active/);
+    await expect(page.locator('body')).not.toHaveClass(/player-open/);
   });
 
   test('renders video cards', async ({ page }) => {

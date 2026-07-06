@@ -1,0 +1,17 @@
+name = "oscahs-training-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "oscahs-training"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "84111ce4ef404e018b1e70a88158aacd"
+
+[vars]
+BUCKET_NAME = "oscahs-training"
+
+[observability]
+enabled = true

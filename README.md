@@ -1,14 +1,20 @@
 # Oscahs Training Library
 
-A Windows desktop app (built with [Tauri](https://tauri.app)) for browsing and playing the OSCAHS staff training videos. Videos are read directly from the team's Dropbox sync folder — no server, no streaming, no internet required once videos are synced.
+A Windows desktop app (built with [Tauri](https://tauri.app)) for browsing and playing OSCAHS staff training videos. Videos and metadata are served from cloud storage (Cloudflare), so every installed copy of the app stays in sync automatically — no file shares, no manual distribution.
 
 ## Features
 
 - **Video library** — grid view with category filters, search-friendly cards, and chapter counts
 - **Full player** — seek bar, volume, playback speed, chapters panel, fullscreen, keyboard shortcuts
 - **Dark mode** — persists across sessions
-- **Admin mode** — a password-gated panel (gear icon, top right) for editing video titles, descriptions, categories, chapters, and **display order**. Changes are written to `videos.json` in the shared Dropbox folder and sync to every installed copy automatically — no app update required for content changes
-- **Auto-updates** — the app checks GitHub Releases on startup and can download and install new versions in place
+- **Admin mode** — a password-gated panel (gear icon, top right) for managing the library:
+  - Edit video titles, descriptions, categories, chapters, and display order
+  - Upload new videos or replace existing ones directly from the app, with a progress bar
+  - Delete videos
+  - Add, rename, recolor, or remove categories — no app update required
+  - See how much storage is in use
+  - Changes sync to every installed copy automatically, with no app update required
+- **Auto-updates** — the app checks for new versions on startup and can download and install them in place
 
 ## Installing the app (staff)
 
@@ -33,6 +39,10 @@ Updates are never installed silently without your action — you always get the 
 
 If the download fails (e.g. no internet at the time), the button shows a brief error message. Just close and reopen the app when you have a connection and it will try again.
 
+### Setting up admin access
+
+The first person to open **Admin mode** (gear icon) on a fresh install will be prompted to create the shared admin password — after that, everyone uses the same login to manage the library. If you ever lose the password, it can be reset by whoever manages the app's cloud backend.
+
 ---
 
 ## Getting started (development)
@@ -52,38 +62,7 @@ cargo tauri dev
 
 The app window opens automatically. Edits to `ui/index.html` hot-reload; Rust changes recompile in a few seconds.
 
-## How videos are discovered
-
-On launch, the Rust backend finds the user's Dropbox folder (via `%LOCALAPPDATA%\Dropbox\info.json`) and scans:
-
-```
-{Dropbox root}\Oscahs Team\Magicbooking Training\
-```
-
-Any `.mp4` file there appears in the library automatically, with a title generated from its filename. Dropping a new video into that folder is all that's needed to add it for everyone.
-
-If Dropbox isn't installed, or you want to use a different folder, click the **folder icon** in the top-right header to set a custom path (you can browse for it or paste one in).
-
-### Custom metadata and ordering
-
-An optional `videos.json` in the same folder overrides titles, descriptions, categories, chapter marks, and **display order** per file. The order entries appear in this file is the order they appear in the library:
-
-```json
-[
-  {
-    "filename": "registers.mp4",
-    "title": "Till Registers",
-    "description": "How to open, use, and close the registers.",
-    "category": "MagicBooking",
-    "chapters": [
-      { "time": 0, "title": "Introduction" },
-      { "time": 45, "title": "Opening the register" }
-    ]
-  }
-]
-```
-
-Any `.mp4` files not listed here appear after the manifest entries, sorted alphabetically. This file is normally managed through **Admin mode** in the app rather than edited by hand — use the ▲/▼ buttons in the admin panel to reorder videos.
+The app has no local content of its own — videos, titles, categories, and admin credentials all live behind a small cloud backend (a Cloudflare Worker in front of R2 object storage). Maintainers: see the (gitignored, not published) technical design document for the backend's architecture, API, and operational details.
 
 ### Keyboard shortcuts
 
@@ -143,9 +122,7 @@ npm run test:ui
 | `home.spec.js` | Video grid renders, category filter pills work |
 | `player.spec.js` | Card click opens player or toast; back button returns home |
 | `theme.spec.js` | Dark/light toggle, localStorage persistence |
-| `admin.spec.js` | Admin/folder modals open and close; Enter key submits forms; Browse button present |
-
-> The three player tests that exercise the player view itself (back button, title, return-to-home) are skipped when no real `.mp4` files are present — the fallback sample videos have no URL. They will run automatically once videos are in the training folder.
+| `admin.spec.js` | Admin modal opens/closes; setup and login forms both work; Enter key submits forms |
 
 ## Building the Windows installer
 
@@ -210,9 +187,10 @@ ui/                              Frontend (HTML/CSS/JS, no build step)
   oscahs-logo.svg / oscahs-logo-white.svg
   fonts/                           Solomon Sans webfonts
 src-tauri/
-  src/lib.rs                       Video scanning, admin auth, folder config, updater
+  src/lib.rs                       Tauri shell: window, updater, process plugins only
   tauri.conf.json                  App + updater config
-  capabilities/default.json        Permission grants (core, updater, process, dialog)
+  capabilities/default.json        Permission grants (core, updater, process)
+worker/                          Cloudflare Worker backend (videos, metadata, admin auth)
 .github/workflows/
   build-windows.yml                Builds an installer artifact on every push to main
   release.yml                      Builds, signs, and publishes a GitHub Release on version tags
