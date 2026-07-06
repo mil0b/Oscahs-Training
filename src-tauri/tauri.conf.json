@@ -34,9 +34,14 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "resources": ["windows/oscahs-codesign.cer"],
     "windows": {
+      "certificateThumbprint": "8032B27ED07EF8879592D3B00C907C541CE64610",
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "http://timestamp.digicert.com",
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerHooks": "./windows/hooks.nsi"
       }
     }
   },
